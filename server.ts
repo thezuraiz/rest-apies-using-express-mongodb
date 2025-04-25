@@ -9,6 +9,7 @@ const startServer = async () => {
   app.listen(port, () => {
     console.log("Server is running on port: ", port);
   });
+  console.warn(`Server is running on ${config.env} mode`);
 };
 
 startServer();
