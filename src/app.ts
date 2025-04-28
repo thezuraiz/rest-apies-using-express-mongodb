@@ -2,6 +2,7 @@ import globalErrorHandler from "./middlewares/global-error-handler";
 // import createHttpError from "http-errors";
 import express from "express";
 import userRouter from "./user/user-router";
+import bookRouter from "./book/book-route";
 
 const app = express();
 
@@ -15,8 +16,10 @@ app.get("/", (req, res, next) => {
   res.json({ message: "Welcome to elib apis" });
 });
 
-// For users apies
+// For Users Apies
 app.use("/api/users", userRouter);
+// For Books Apies
+app.use("/api/books", bookRouter);
 
 // Global error handler
 app.use(globalErrorHandler);
