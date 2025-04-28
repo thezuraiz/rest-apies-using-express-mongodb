@@ -49,4 +49,44 @@ const userRegisterController = async (
   }
 };
 
-export { userRegisterController };
+const userLoginController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Validation
+    const data = req.body;
+    if (!data) {
+      return next(createHttpError(300, "Invalid Data format"));
+    }
+    const { email, password } = data;
+    if (!email || !password) {
+      return next(createHttpError(300, "Email and password required"));
+    }
+
+    // Check for is available in our database
+    const findedUser = await userModel.findOne({ email });
+    if (!findedUser) {
+      return next(
+        createHttpError("400", "User not found, please register first")
+      );
+    }
+
+    // Match Password
+    const isMatched = await bcrypt.compare(password, findedUser.password);
+    if (!isMatched) {
+      return next(createHttpError(300, "Incorect Password"));
+    }
+
+    // create token
+    const token = await sign({ sub: findedUser._id }, config.secret as string, {
+      expiresIn: "7D",
+    });
+    res.json({ accessToken: token });
+  } catch (e) {
+    return next(createHttpError(500, `Something went wrong ${e}`));
+  }
+};
+
+export { userRegisterController, userLoginController };
