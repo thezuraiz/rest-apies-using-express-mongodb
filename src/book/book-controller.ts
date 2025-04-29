@@ -5,6 +5,7 @@ const createBookController = async (
   res: Response,
   next: NextFunction
 ) => {
+  console.log("req: ", req.files);
   res.json({});
 };
 
