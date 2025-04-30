@@ -4,6 +4,7 @@ import cloudinary from "../config/cloudinary";
 import path from "path";
 import bookModel from "./book-model";
 import fs from "fs";
+import { AuthRequest } from "../middlewares/authorization";
 
 const createBookController = async (
   req: Request,
@@ -22,8 +23,7 @@ const createBookController = async (
     }
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-    console.log("req.files: ", files);
-
+    // console.log("req.files: ", files);
     // For Cover Image
     const coverImage = files?.["cover-image"]?.[0];
     if (!coverImage) {
@@ -34,21 +34,21 @@ const createBookController = async (
     console.log("coverImageMimeType:", coverImageMimeType);
 
     const fileName = coverImage.filename;
-    console.log("fileName: ", fileName);
+    // console.log("fileName: ", fileName);
 
     const coverFilePath = path.resolve(
       __dirname,
       "../../public/data/uploads",
       fileName
     );
-    console.log("Cover file path: ", coverFilePath);
+    // console.log("Cover file path: ", coverFilePath);
 
     const uploadCover = await cloudinary.uploader.upload(coverFilePath, {
       filename_override: fileName,
       folder: "book-covers",
     });
 
-    console.log("uploadBookCoverResult: ", uploadCover);
+    // console.log("uploadBookCoverResult: ", uploadCover);
 
     /// For Book
     const bookFile = files?.["book-file"]?.[0];
@@ -56,31 +56,34 @@ const createBookController = async (
       return next(createHttpError("book file is required"));
     }
 
-    const bookMimeType = bookFile.mimetype.split("/").at(-1);
-    console.log("bookMimeType:", bookMimeType);
+    // Not required on new versions
+    // const bookMimeType = bookFile.mimetype.split("/").at(-1);
+    // console.log("bookMimeType:", bookMimeType);
 
     const bookFileName = bookFile.filename;
-    console.log("bookFileName: ", bookFileName);
+    // console.log("bookFileName: ", bookFileName);
 
     const bookPath = path.resolve(
       __dirname,
       "../../public/data/uploads",
       bookFileName
     );
-    console.log("file path: ", coverFilePath);
+    // console.log("file path: ", coverFilePath);
 
     const uploadBook = await cloudinary.uploader.upload(bookPath, {
       filename_override: bookFileName,
       folder: "books",
     });
 
-    console.log("uploadBook: ", uploadBook);
+    // console.log("uploadBook: ", uploadBook);
+
+    const _req = req as AuthRequest;
 
     // Now save it in database
     const new_book = await bookModel.create({
       title,
       genre,
-      author: "680b5602b861f9c1768b9a9e",
+      author: _req.userId,
       coverImage: uploadCover.secure_url,
       file: uploadBook.secure_url,
     });
