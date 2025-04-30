@@ -17,11 +17,11 @@ bookRouter.post(
   "/",
   upload.fields([
     {
-      name: "coverImage",
+      name: "cover-image",
       maxCount: 1,
     },
     {
-      name: "file",
+      name: "book-file",
       maxCount: 1,
     },
   ]),
