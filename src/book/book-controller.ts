@@ -189,13 +189,44 @@ const updateBookController = async (
           : book.coverImage,
         file: uploadedBookCover ? uploadedBookCover.secure_url : book.file,
       },
-      { new: true }
+      { new: true } // return updated records
     );
 
-    res.status(200).json({ updatedBook });
+    res.status(200).json({ book: updatedBook });
   } catch (e) {
     return next(createHttpError(500, `Something went wrong: ${e}`));
   }
 };
 
-export { createBookController, updateBookController };
+const getAllBooks = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const books = await bookModel.find();
+    res.status(200).json(books);
+  } catch (e) {
+    return next(createHttpError(500, `Somthing went wrong! ${e}`));
+  }
+};
+
+const getSingleBook = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const bookId = req.params.id;
+  console.debug("bookId:", bookId, typeof bookId);
+  try {
+    const book = await bookModel.findById(bookId);
+    console.debug(book);
+
+    res.status(200).json(book);
+  } catch (_) {
+    return next(createHttpError(404, "Book not found!"));
+  }
+};
+
+export {
+  createBookController,
+  updateBookController,
+  getAllBooks,
+  getSingleBook,
+};
