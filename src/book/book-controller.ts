@@ -5,6 +5,7 @@ import path from "path";
 import bookModel from "./book-model";
 import fs from "fs";
 import { AuthRequest } from "../middlewares/authorization";
+import { TBook } from "./book-types";
 
 const createBookController = async (
   req: Request,
@@ -100,4 +101,101 @@ const createBookController = async (
   }
 };
 
-export { createBookController };
+const updateBookController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const paramsID = req.params.id;
+    if (!paramsID) {
+      return next(createHttpError(300, "Book Id Required"));
+    }
+
+    const book = await bookModel.findById(paramsID);
+    // console.debug("book: ", book);
+    if (!book) {
+      return next(createHttpError(404, "Book not found"));
+    }
+
+    const bookAuthor = book.author.toString();
+    const _req = req as AuthRequest;
+    if (_req.userId != bookAuthor) {
+      return next(createHttpError(403, "Un Authorized"));
+    }
+    const request = req.body;
+    if (!request) {
+      return next(createHttpError(300, "Missing Body Parameters"));
+    }
+
+    const { title = book.title, genre = book.genre } = req.body;
+
+    let uploadedCoverImage, uploadedBookCover;
+
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    // For Cover Image
+    const coverImage = files?.["cover-image"]?.[0];
+    if (coverImage) {
+      const fileName = coverImage.filename;
+      // console.log("fileName: ", fileName);
+
+      const coverFilePath = path.resolve(
+        __dirname,
+        "../../public/data/uploads",
+        fileName
+      );
+      // console.log("Cover file path: ", coverFilePath);
+
+      uploadedCoverImage = await cloudinary.uploader.upload(coverFilePath, {
+        filename_override: fileName,
+        folder: "book-covers",
+      });
+      await fs.promises.unlink(coverFilePath);
+      // console.log("uploadBookCoverResult: ", uploadedCoverImage);
+    }
+
+    /// For Book
+    const bookFile = files?.["book-file"]?.[0];
+    if (bookFile) {
+      const bookFileName = bookFile.filename;
+      // console.log("bookFileName: ", bookFileName);
+
+      const bookPath = path.resolve(
+        __dirname,
+        "../../public/data/uploads",
+        bookFileName
+      );
+
+      // console.log("book path: ", bookPath);
+
+      uploadedBookCover = await cloudinary.uploader.upload(bookPath, {
+        filename_override: bookFileName,
+        folder: "books",
+      });
+
+      // console.log("uploadBook: ", uploadedBookCover);
+
+      await fs.promises.unlink(bookPath);
+    }
+
+    const updatedBook = await bookModel.findOneAndUpdate<TBook>(
+      { _id: paramsID },
+      {
+        title: title ? title : book.title,
+        genre: genre ? genre : book.genre,
+        coverImage: uploadedCoverImage
+          ? uploadedCoverImage.secure_url
+          : book.coverImage,
+        file: uploadedBookCover ? uploadedBookCover.secure_url : book.file,
+      },
+      { new: true }
+    );
+
+    res.status(200).json({ updatedBook });
+  } catch (e) {
+    return next(createHttpError(500, `Something went wrong: ${e}`));
+  }
+};
+
+export { createBookController, updateBookController };
