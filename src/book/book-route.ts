@@ -4,6 +4,7 @@ import {
   updateBookController,
   getAllBooks,
   getSingleBook,
+  deleteBook,
 } from "./book-controller";
 import multer from "multer";
 import path from "node:path";
@@ -57,4 +58,7 @@ bookRouter.get("/", getAllBooks);
 
 // Get Single Books
 bookRouter.get("/:id", getSingleBook);
+
+// Delete Book
+bookRouter.delete("/:bookId", Authentication, deleteBook);
 export default bookRouter;

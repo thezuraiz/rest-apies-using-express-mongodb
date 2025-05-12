@@ -224,9 +224,54 @@ const getSingleBook = async (
   }
 };
 
+const deleteBook = async (req: Request, res: Response, next: NextFunction) => {
+  const bookId = req.params.bookId;
+  try {
+    // Find Book
+    const book = await bookModel.findById(bookId);
+    if (!book) {
+      return next(createHttpError(400, "Book Not Found"));
+    }
+    console.log("Book Found");
+
+    // Now check for authentication
+    const _req = req as AuthRequest;
+    if (book.author.toString() != _req.userId) {
+      console.log("Un-Authorized");
+      return next(createHttpError(404, "UnAuthorized"));
+    }
+
+    // Delete Files
+    // https://res.cloudinary.com/dztsf4kjw/image/upload/v1746199371/book-covers/wnurtdeay2bunpgepqyh.jpg
+    // expected url to delete book-covers/wnurtdeay2bunpgepqyh
+    const coverImage = book.coverImage.split("/");
+    const coverImageUrl =
+      coverImage.at(-2) + "/" + coverImage.at(-1)?.split(".")[0];
+    console.debug(coverImageUrl);
+
+    const file = book.file.split("/");
+    console.log("file: ", file);
+    const fileUrl = file.at(-2) + "/" + file.at(-1)?.split(".")[0];
+    console.debug(fileUrl);
+
+    await cloudinary.uploader.destroy(coverImageUrl);
+    await cloudinary.uploader
+      .destroy(fileUrl)
+      .then((result) => console.log(result));
+
+    // Delete book from database
+    await bookModel.deleteOne({ _id: bookId });
+    res.status(200).json({ message: "Book Successfully deleted" });
+  } catch (e) {
+    console.log(`Error: ${e}`);
+    next(e);
+  }
+};
+
 export {
   createBookController,
   updateBookController,
   getAllBooks,
   getSingleBook,
+  deleteBook,
 };
