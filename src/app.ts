@@ -3,6 +3,7 @@ import globalErrorHandler from "./middlewares/global-error-handler";
 import express from "express";
 import userRouter from "./user/user-router";
 import bookRouter from "./book/book-route";
+import authRoute from "./auth-routes/route";
 
 const app = express();
 
@@ -20,6 +21,8 @@ app.get("/", (req, res) => {
 app.use("/api/users", userRouter);
 // For Books Apies
 app.use("/api/books", bookRouter);
+// For Protected Routes
+app.use("/api/auth", authRoute);
 
 // Global error handler
 app.use(globalErrorHandler);

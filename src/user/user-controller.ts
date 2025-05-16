@@ -38,10 +38,14 @@ const userRegisterController = async (
     });
 
     // JWT Token NOTE: "Sign" ko jsonwebtoken sy import krna hy
-    const token = await sign({ sub: newUser._id }, config.secret as string, {
-      expiresIn: "7d",
-      // algorithm: "HS256", bby default ye value pakarta hy
-    });
+    const token = await sign(
+      { id: newUser._id, role: newUser.role },
+      config.secret as string,
+      {
+        expiresIn: "7d",
+        // algorithm: "HS256", bby default ye value pakarta hy
+      }
+    );
 
     res.status(201).json({ accessToken: token });
   } catch (e) {
@@ -80,9 +84,13 @@ const userLoginController = async (
     }
 
     // create token
-    const token = await sign({ sub: findedUser._id }, config.secret as string, {
-      expiresIn: "7D",
-    });
+    const token = await sign(
+      { id: findedUser._id, role: findedUser.role },
+      config.secret as string,
+      {
+        expiresIn: "7D",
+      }
+    );
     res.json({ accessToken: token });
   } catch (e) {
     return next(createHttpError(500, `Something went wrong ${e}`));

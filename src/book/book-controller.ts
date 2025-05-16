@@ -4,7 +4,7 @@ import cloudinary from "../config/cloudinary";
 import path from "path";
 import bookModel from "./book-model";
 import fs from "fs";
-import { AuthRequest } from "../middlewares/authorization";
+import { AuthRequest } from "../middlewares/authentication";
 import { TBook } from "./book-types";
 
 const createBookController = async (
